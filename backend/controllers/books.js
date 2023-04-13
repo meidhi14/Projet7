@@ -1,7 +1,7 @@
 const Book = require("../models/Book");
 
 // --- Envoyer un livre ---
-exports.sendBook = (req, res) => {
+exports.sendBook = (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
   delete bookObject._id;
   delete bookObject._userId;
@@ -21,6 +21,7 @@ exports.sendBook = (req, res) => {
     .catch((error) => {
       res.status(400).json({ error });
     });
+  console.log(book);
 };
 
 // --- Récuperer tous les livres ---
@@ -50,3 +51,9 @@ exports.deleteOneBook = (req, res, next) => {
     .then(() => res.status(200).json({ message: "Livre supprimé  !" }))
     .catch((error) => res.status(400).json({ error }));
 };
+
+// --- Récuperer les trois meilleur livre ---
+exports.getBestBook = (req, res, next) => {};
+
+// --- Envoyer une note ---
+exports.sendRate = (req, res, next) => {};
