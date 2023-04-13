@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const bookCtrl = require("../controllers/books");
+const auth = require("../middleware/auth");
 
 // --- Envoyer un livre ---
-router.post("/", bookCtrl.sendBook);
+router.post("/", auth, bookCtrl.sendBook);
 
 // --- Récuperer tous les livres ---
 router.get("/", bookCtrl.getAllBook);
@@ -12,9 +13,9 @@ router.get("/", bookCtrl.getAllBook);
 router.get("/:id", bookCtrl.getOneBook);
 
 // --- Modifier un livre avec son id ---
-router.put("/:id", bookCtrl.modifyOneBook);
+router.put("/:id", auth, bookCtrl.modifyOneBook);
 
 // --- Supprimer un livre avec son id ---
-router.delete("/:id", bookCtrl.deleteOneBook);
+router.delete("/:id", auth, bookCtrl.deleteOneBook);
 
 module.exports = router;
