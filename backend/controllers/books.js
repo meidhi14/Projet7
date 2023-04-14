@@ -21,7 +21,6 @@ exports.sendBook = (req, res, next) => {
     .catch((error) => {
       res.status(400).json({ error });
     });
-  console.log(book);
 };
 
 // --- Récuperer tous les livres ---
@@ -39,11 +38,7 @@ exports.getOneBook = (req, res) => {
 };
 
 // --- Modifier un livre avec son id ---
-exports.modifyOneBook = (req, res, next) => {
-  Book.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Livre modifié !" }))
-    .catch((error) => res.status(400).json({ error }));
-};
+exports.modifyOneBook = (req, res, next) => {};
 
 // --- Supprimer un livre avec son id ---
 exports.deleteOneBook = (req, res, next) => {
@@ -53,7 +48,48 @@ exports.deleteOneBook = (req, res, next) => {
 };
 
 // --- Récuperer les trois meilleur livre ---
-exports.getBestBook = (req, res, next) => {};
+exports.getBestBooks = (req, res, next) => {
+  Book.find()
+    .sort({ averageRating: -1 })
+    .limit(3)
+    .then((books) => {
+      res.status(200).json(books);
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
+};
 
 // --- Envoyer une note ---
-exports.sendRate = (req, res, next) => {};
+exports.sendRate = (req, res, next) => {
+  // --- Nouvelle note à envoyer ---
+  const newRating = {
+    userId: req.body.userId,
+    grade: req.body.rating,
+  };
+  // --- Envoyer la nouvelle note ---
+  Book.updateOne({ _id: req.params.id }, { $push: { ratings: newRating } })
+    .then(() => {
+      // --- mettre à jour la moyenne ---
+      Book.findOne({ _id: req.params.id }).then((book) => {
+        let totalRatings = 0;
+        let averageRating = 0;
+        for (let i = 0; i < book.ratings.length; i++) {
+          totalRatings += book.ratings[i].grade;
+        }
+        averageRating = totalRatings / book.ratings.length;
+        Book.updateOne(
+          { _id: req.params.id },
+          { $set: { averageRating: averageRating } }
+        ).then((book) => {
+          res.status(200).json({
+            message: "Nouvelle note ajoutée et la moyenne est mise à jour !",
+            book,
+          });
+        });
+      });
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
+};
