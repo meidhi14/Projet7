@@ -24,4 +24,5 @@ router.get("/bestrating", bookCtrl.getBestBook);
 
 // --- Envoyer une note ---
 router.post("/:id/rating", auth, bookCtrl.sendRate);
+
 module.exports = router;
