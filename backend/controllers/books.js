@@ -1,4 +1,4 @@
-const Book = require("../models/Book");
+const Book = require('../models/Book');
 
 // --- Envoyer un livre ---
 exports.sendBook = (req, res, next) => {
@@ -8,7 +8,7 @@ exports.sendBook = (req, res, next) => {
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
-    imageUrl: `${req.protocol}://${req.get("host")}/images/${
+    imageUrl: `${req.protocol}://${req.get('host')}/images/${
       req.file.filename
     }`,
   });
@@ -16,7 +16,7 @@ exports.sendBook = (req, res, next) => {
   book
     .save()
     .then(() => {
-      res.status(201).json({ message: "livre enregistré !" });
+      res.status(201).json({ message: 'livre enregistré !' });
     })
     .catch((error) => {
       res.status(400).json({ error });
@@ -33,18 +33,59 @@ exports.getAllBook = (req, res) => {
 // --- Récuperer un livre avec son id ---
 exports.getOneBook = (req, res) => {
   Book.findOne({ _id: req.params.id })
-    .then((book) => res.status(200).json(book))
+    .then((book) => {
+      res.status(200).json(book);
+    })
     .catch((error) => res.status(404).json({ error }));
 };
 
 // --- Modifier un livre avec son id ---
-exports.modifyOneBook = (req, res, next) => {};
+exports.modifyOneBook = (req, res, next) => {
+  const bookObject = req.file
+    ? {
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+  delete bookObject._userId;
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(401).json({ message: 'Non-autorisé !' });
+      } else {
+        Book.updateOne(
+          { _id: req.params.id },
+          { ...bookObject, _id: req.params.id }
+        )
+          .then(() => res.status(200).json({ message: 'Objet modifié !' }))
+          .catch((error) => res.status(400).json({ error }));
+      }
+    })
+    .catch((error) => res.status(400).json({ error }));
+};
 
 // --- Supprimer un livre avec son id ---
 exports.deleteOneBook = (req, res, next) => {
-  Book.deleteOne({ _id: req.params.id })
-    .then(() => res.status(200).json({ message: "Livre supprimé  !" }))
-    .catch((error) => res.status(400).json({ error }));
+  Book.findOne({ _id: req.params.id })
+    .then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(401).json({ message: 'Not authorized' });
+      } else {
+        const filename = book.imageUrl.split('/images/')[1];
+        fs.unlink(`images/${filename}`, () => {
+          Book.deleteOne({ _id: req.params.id })
+            .then(() => {
+              res.status(200).json({ message: 'Livre supprimé !' });
+            })
+            .catch((error) => res.status(401).json({ error }));
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ error });
+    });
 };
 
 // --- Récuperer les trois meilleur livre ---
@@ -83,7 +124,7 @@ exports.sendRate = (req, res, next) => {
           { $set: { averageRating: averageRating } }
         ).then((book) => {
           res.status(200).json({
-            message: "Nouvelle note ajoutée et la moyenne est mise à jour !",
+            message: 'Nouvelle note ajoutée et la moyenne est mise à jour !',
             book,
           });
         });
