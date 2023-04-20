@@ -1,4 +1,5 @@
 const Book = require('../models/Book');
+const fs = require('fs');
 
 // --- Envoyer un livre ---
 exports.sendBook = (req, res, next) => {
@@ -24,14 +25,14 @@ exports.sendBook = (req, res, next) => {
 };
 
 // --- Récuperer tous les livres ---
-exports.getAllBook = (req, res) => {
+exports.getAllBook = (req, res, next) => {
   Book.find()
     .then((books) => res.status(200).json(books))
     .catch((error) => res.status(400).json({ error }));
 };
 
 // --- Récuperer un livre avec son id ---
-exports.getOneBook = (req, res) => {
+exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       res.status(200).json(book);
@@ -55,12 +56,15 @@ exports.modifyOneBook = (req, res, next) => {
       if (book.userId != req.auth.userId) {
         res.status(401).json({ message: 'Non-autorisé !' });
       } else {
-        Book.updateOne(
-          { _id: req.params.id },
-          { ...bookObject, _id: req.params.id }
-        )
-          .then(() => res.status(200).json({ message: 'Objet modifié !' }))
-          .catch((error) => res.status(400).json({ error }));
+        const filename = book.imageUrl.split('/images/')[1];
+        fs.unlink(`images/${filename}`, () => {
+          Book.updateOne(
+            { _id: req.params.id },
+            { ...bookObject, _id: req.params.id }
+          )
+            .then(() => res.status(200).json({ message: 'Objet modifié !' }))
+            .catch((error) => res.status(400).json({ error }));
+        });
       }
     })
     .catch((error) => res.status(400).json({ error }));
@@ -122,11 +126,13 @@ exports.sendRate = (req, res, next) => {
         Book.updateOne(
           { _id: req.params.id },
           { $set: { averageRating: averageRating } }
-        ).then((book) => {
-          res.status(200).json({
-            message: 'Nouvelle note ajoutée et la moyenne est mise à jour !',
-            book,
-          });
+        ).then(() => {
+          // afficher de nouveau le livre
+          Book.findOne({ _id: req.params.id })
+            .then((book) => {
+              res.status(200).json(book);
+            })
+            .catch((error) => res.status(404).json({ error }));
         });
       });
     })
