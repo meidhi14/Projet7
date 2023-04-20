@@ -31,6 +31,19 @@ exports.getAllBook = (req, res, next) => {
     .catch((error) => res.status(400).json({ error }));
 };
 
+// --- Récuperer les trois meilleur livre ---
+exports.getBestBooks = (req, res, next) => {
+  Book.find()
+    .sort({ averageRating: -1 })
+    .limit(3)
+    .then((books) => {
+      res.status(200).json(books);
+    })
+    .catch((error) => {
+      res.status(400).json({ error });
+    });
+};
+
 // --- Récuperer un livre avec son id ---
 exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
@@ -89,19 +102,6 @@ exports.deleteOneBook = (req, res, next) => {
     })
     .catch((error) => {
       res.status(500).json({ error });
-    });
-};
-
-// --- Récuperer les trois meilleur livre ---
-exports.getBestBooks = (req, res, next) => {
-  Book.find()
-    .sort({ averageRating: -1 })
-    .limit(3)
-    .then((books) => {
-      res.status(200).json(books);
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
     });
 };
 
