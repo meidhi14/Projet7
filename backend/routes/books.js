@@ -3,9 +3,10 @@ const router = express.Router();
 const bookCtrl = require('../controllers/books');
 const auth = require('../middleware/auth');
 const multer = require('../middleware/multer-config');
+const sharp = require('../middleware/sharp');
 
 // --- Envoyer un livre ---
-router.post('/', auth, multer, bookCtrl.sendBook);
+router.post('/', auth, multer, sharp, bookCtrl.sendBook);
 
 // --- Récuperer tous les livres ---
 router.get('/', bookCtrl.getAllBook);
@@ -20,7 +21,7 @@ router.delete('/:id', auth, bookCtrl.deleteOneBook);
 router.get('/:id', bookCtrl.getOneBook);
 
 // --- Modifier un livre avec son id ---
-router.put('/:id', auth, multer, bookCtrl.modifyOneBook);
+router.put('/:id', auth, multer, sharp, bookCtrl.modifyOneBook);
 
 // --- Envoyer une note ---
 router.post('/:id/rating', auth, bookCtrl.sendRate);

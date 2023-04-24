@@ -6,6 +6,7 @@ exports.sendBook = (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
   delete bookObject._id;
   delete bookObject._userId;
+
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
@@ -13,7 +14,7 @@ exports.sendBook = (req, res, next) => {
       req.file.filename
     }`,
   });
-
+  // --- Sauvegarder le livre ---
   book
     .save()
     .then(() => {
